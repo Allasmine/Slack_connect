@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slack Connect UI</title>
+</head>
+<body>
+  <h1>Slack Connect</h1>
+
+  <!-- Step 1: Connect to Slack -->
+  <button id="connectSlack" type="button">Connect to Slack</button>
+
+  <hr>
+
+  <!-- Step 2: Send Message -->
+  <h2>Send Message</h2>
+  <form id="sendForm">
+    <input type="text" id="channelSend" placeholder="Channel ID" required>
+    <input type="text" id="textSend" placeholder="Message" required>
+    <input type="text" id="userIdSend" placeholder="Slack User ID" required>
+    <button type="submit">Send Now</button>
+  </form>
+
+  <hr>
+
+  <!-- Step 3: Schedule Message -->
+  <h2>Schedule Message</h2>
+  <form id="scheduleForm">
+    <input type="text" id="channelSchedule" name="channelSchedule" placeholder="Channel ID" required>
+    <input type="text" id="textSchedule" name="textSchedule" placeholder="Message" required>
+    <label for="sendAt">Send at:</label>
+    <input type="datetime-local" id="sendAt" name="sendAt" placeholder="Select date & time" required />
+    <input type="text" id="userIdSchedule" name="userIdSchedule" placeholder="Slack User ID" required>
+    <button type="submit">Schedule</button>
+  </form>
+
+  <script>
+    const BASE_URL = "https://fbf430a4669b.ngrok-free.app"; // change to ngrok URL if using ngrok
+
+    // Auto-fetch Slack User ID
+    async function fetchSlackUserId() {
+      try {
+        const res = await fetch(`${BASE_URL}/debug/users`);
+        const users = await res.json();
+
+        if (users.length > 0 && users[0].slack_user_id) {
+          document.getElementById("userIdSend").value = users[0].slack_user_id;
+          document.getElementById("userIdSchedule").value = users[0].slack_user_id;
+          console.log("✅ Auto-filled Slack User ID:", users[0].slack_user_id);
+        } else {
+          console.warn("⚠ No Slack user found in DB.");
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch Slack User ID:", err);
+      }
+    }
+
+    fetchSlackUserId();
+
+    // Connect to Slack
+    document.getElementById("connectSlack").addEventListener("click", () => {
+      window.location.href = `${BASE_URL}/auth/slack`;
+    });
+
+    // Send message immediately
+    document.getElementById("sendForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const channel = document.getElementById("channelSend").value;
+      const text = document.getElementById("textSend").value;
+      const userId = document.getElementById("userIdSend").value;
+
+      try {
+        const res = await fetch(`${BASE_URL}/message/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ channel, text, userId })
+        });
+        const data = await res.json();
+        alert("Send response: " + JSON.stringify(data));
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    });
+
+    // Schedule message
+    document.getElementById("scheduleForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const channel = document.getElementById("channelSchedule").value;
+      const text = document.getElementById("textSchedule").value;
+      const sendAt = document.getElementById("sendAt").value;
+      const userId = document.getElementById("userIdSchedule").value;
+
+      try {
+        const res = await fetch(`${BASE_URL}/message/schedule`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ channel, text, sendAt, userId })
+        });
+        const data = await res.json();
+        alert("Schedule response: " + JSON.stringify(data));
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>
