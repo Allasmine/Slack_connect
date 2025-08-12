@@ -4,9 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm-run-all --parallel serve tunnel",
-    "serve": "nodemon src/app.js",
-    "tunnel": "node ngrok.js"
+    "start": "node src/app.js"
   },
   "keywords": [],
   "author": "",
